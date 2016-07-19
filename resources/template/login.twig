@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>title</title>
+    </head>
+    <body>
+        <form action="{{ path('admin_login_check') }}" method="post">
+            {{ error }}
+            <p>admin/password</p>
+            <input type="text" name="_username" value="{{ last_username }}" />
+            <input type="password" name="_password" value="" />
+            <input type="submit" value="Login" />
+        </form>
+    </body>
+</html>

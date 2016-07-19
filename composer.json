@@ -1,0 +1,21 @@
+{
+    "name": "aoloe/-silex-demo-security",
+    "description": "A minimal demo for a site with a login page",
+    "license": "MIT",
+    "type": "project",
+    "require": {
+        "php": ">=5.5.9",
+        "silex/silex": "~2.0",
+        "symfony/security": "~2.8|3.0.*",
+        "symfony/twig-bridge": "^3.1",
+        "twig/twig": "~1.23",
+        "twitter/bootstrap": "~3.3.6",
+        "monolog/monolog": "^1.20"
+	},
+    "autoload": {
+        "psr-4": {
+            "Aoloe\\Demo\\": "app/",
+            "": "app/"
+        }
+    }
+}
