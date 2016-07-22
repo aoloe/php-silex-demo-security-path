@@ -23,12 +23,16 @@ class Application extends SilexApplication
 
         $app->register(new \Silex\Provider\MonologServiceProvider(), $app['monolog.options']);
 
-        $app->register(new \Silex\Provider\SecurityServiceProvider());
         $app->register(new \Silex\Provider\SessionServiceProvider());
+        $app->register(new \Silex\Provider\SecurityServiceProvider());
+
+        $users = [
+            'admin' => ['ROLE_ADMIN', $app['security.default_encoder']->encodePassword('password', '')],
+        ];
 
         $app['security.firewalls'] = [
             'admin' => [
-                'pattern' => '^/admin/',
+                'pattern' => '^/admin',
                 'form' => [
                     'login_path' => '/login',
                     'logout' => [
@@ -38,9 +42,7 @@ class Application extends SilexApplication
                     'default_target_path' => '/admin',
                     'check_path' => '/admin/login_check'
                 ],
-                'users' => [
-                    'admin' => ['ROLE_ADMIN', $app['security.default_encoder']->encodePassword('password', '')],
-                ],
+                'users' => $users,
             ],
         ];
 
