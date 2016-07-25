@@ -35,34 +35,32 @@ class Application extends SilexApplication
             return new PlaintextPasswordEncoder();
         };
 
+        // You need to have unencoded passwords to define an array of users in the code itself.
+        // In production, you have to store a list of hashed passwords in an external resource
+        // (and avoid calculating a new hash on each reload!).
+        // Use $app['security.default_encoder']->encodePassword('password', '') to encode passwords.
         $users = [
-            // 'admin' => ['ROLE_ADMIN', $app['security.default_encoder']->encodePassword('password', 'abc')],
-            // 'admin' => ['ROLE_ADMIN', $app['security.encoder.digest']->encodePassword('password', 'abc')],
-            'admin' => ['ROLE_ADMIN', 'password'],
+            'admin' => ['ROLE_ADMIN', 'password']
         ];
 
+        // You have to make sure that the paths defined in the firewall rules are exactly the same
+        // as the one in the routes (trailing / inclusive).
         $app['security.firewalls'] = [
             'admin' => [
-                'pattern' => '^/admin',
+                'pattern' => '^/admin/',
                 'form' => [
                     'login_path' => '/login',
-                    'logout' => [
-                        'logout_path' => '/admin/logout',
-                        'target_url' => 'home',
-                        'invalidate_session' => true
-                    ],
-                    'default_target_path' => '/admin',
+                    'default_target_path' => '/admin/',
                     'check_path' => '/admin/login_check'
+                ],
+                'logout' => [
+                    'logout_path' => '/admin/logout',
+                    'target_url' => 'admin',
+                    'invalidate_session' => true
                 ],
                 'users' => $users,
             ],
         ];
-
-        /*
-        $app['security.utils'] = function ($app) {
-            return new \Symfony\Component\Security\Http\Authentication\AuthenticationUtils($app['request_stack']);
-        };
-        */
 
         $app->boot();
 

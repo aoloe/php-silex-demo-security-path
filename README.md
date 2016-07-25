@@ -8,35 +8,31 @@ Implementing the basic snippets from <http://silex.sensiolabs.org/doc/master/pro
 
 ## Stackoverflow question
 
-Having a hard time in getting `symfony/security/ to work together with Silex 2.0, I'm trying to create a complete implementation of the basic snippets from <http://silex.sensiolabs.org/doc/providers/security.html>.
-
-It currently works without errors, but the `/admin` route alway shows the _login_ link and never the _logout_ one.  
-There are three possible causes: the authentication does not work, it does not get stored in the session, or the template does not see it.
-
-The full code is on Github (<https://github.com/aoloe/php-silex-demo-security-path>). Below you can find the most relevant files.
+The full code is on Github (<https://github.com/aoloe/php-silex-demo-security-path>). Below you can find the most relevant parts.
 
 `web/index.php`:
 
     <?php
 
-    error_reporting(E_ALL);
-    ini_set('display_errors', 1);
-
     define('APP_BASEDIR', dirname(__DIR__));
 
     include_once(APP_BASEDIR.'/vendor/autoload.php');
 
+    use Symfony\Component\HttpFoundation\Request;
+
     $app = new Aoloe\Demo\Application();
 
-    $app->get('/admin', function(/* Request $request*/) use ($app) {
+    $app->get('/admin/', function(Request $request) use ($app) {
 
         return $app['twig']->render('admin.twig', [
-            // 'content' => ($app['security.authorization_checker']->isGranted('ROLE_ADMIN') ? 'logged in' : 'not logged in'),
-            'content' => 'Admin area',
+            'content' => ($app['security.authorization_checker']->isGranted('ROLE_ADMIN') ? 'You\'re logged in.' : 'You\'re not logged in.'),
         ]);
-    });
+    })->bind('admin');
 
-    use Symfony\Component\HttpFoundation\Request;
+    $app->get('/', function(Request $request) use ($app) {
+        return $app['twig']->render('index.twig', [
+        ]);
+    })->bind('home');
 
     $app->get('/login', function(Request $request) use ($app) {
         return $app['twig']->render(
@@ -48,23 +44,15 @@ The full code is on Github (<https://github.com/aoloe/php-silex-demo-security-pa
         );
     })->bind('login');
 
-    $app->get('/admin/logout', function(Request $request) use ($app) {
-        return $app->redirect($app['url_generator']->generate('home'));
-    });
-
-    $app->get('/', function(Request $request) use ($app) {
-        return $app['twig']->render('index.twig', [
-        ]);
-    })->bind('home');
-
-    $app->run();
-
 `app/Application.php`:
 
     <?php
+
     namespace Aoloe\Demo;
 
     use \Silex\Application as SilexApplication;
+
+    use Symfony\Component\Security\Core\Encoder\PlaintextPasswordEncoder;
 
     class Application extends SilexApplication
     {
@@ -76,42 +64,43 @@ The full code is on Github (<https://github.com/aoloe/php-silex-demo-security-pa
 
             $app['debug'] = true;
 
-            date_default_timezone_set('Europe/Zurich');
-
             $app['monolog.options'] = [
                 'monolog.logfile' => APP_BASEDIR.'/var/logs/app.log',
                 'monolog.name' => 'app',
-                // 'monolog.level' => 300, // = Logger::WARNING
             ];
 
             $app->register(new \Silex\Provider\MonologServiceProvider(), $app['monolog.options']);
 
+            $app->register(
+                new \Silex\Provider\SessionServiceProvider(),
+                ['session.storage.save_path' => APP_BASEDIR.'/var/sessions']
+            );
             $app->register(new \Silex\Provider\SecurityServiceProvider());
-            $app->register(new \Silex\Provider\SessionServiceProvider());
+
+            $app['security.default_encoder'] = function ($app) {
+                return new PlaintextPasswordEncoder();
+            };
+
+            $users = [
+                'admin' => ['ROLE_ADMIN', 'password']
+            ];
 
             $app['security.firewalls'] = [
                 'admin' => [
                     'pattern' => '^/admin/',
                     'form' => [
                         'login_path' => '/login',
-                        'logout' => [
-                            'logout_path' => '/admin/logout',
-                            'invalidate_session' => true
-                        ],
-                        'default_target_path' => '/admin',
+                        'default_target_path' => '/admin/',
                         'check_path' => '/admin/login_check'
                     ],
-                    'users' => [
-                        'admin' => ['ROLE_ADMIN', $app['security.default_encoder']->encodePassword('password', '')],
+                    'logout' => [
+                        'logout_path' => '/admin/logout',
+                        'target_url' => 'admin',
+                        'invalidate_session' => true
                     ],
+                    'users' => $users,
                 ],
             ];
-
-            /*
-            $app['security.utils'] = function ($app) {
-                return new \Symfony\Component\Security\Http\Authentication\AuthenticationUtils($app['request_stack']);
-            };
-            */
 
             $app->boot();
 
@@ -121,7 +110,6 @@ The full code is on Github (<https://github.com/aoloe/php-silex-demo-security-pa
 
         }
     }
-
 
 
 `resources/template/login.twig`:
@@ -157,10 +145,12 @@ The full code is on Github (<https://github.com/aoloe/php-silex-demo-security-pa
         </head>
         <body>
             <h1>Admin</h1>
+            <p>Admin Area.</p>
             <p>{{ content }}</p>
             <p>
+            
             {% if is_granted('ROLE_ADMIN') %}
-                <a href="{{ path('logout') }}">Logout</a>
+                <a href="{{ path('admin_logout') }}">Logout</a>
             {% else %}
                 <a href="{{ path('login') }}">Login</a>
             {% endif %}
@@ -170,3 +160,18 @@ The full code is on Github (<https://github.com/aoloe/php-silex-demo-security-pa
         </body>
     </html>
 
+
+## Remarks
+
+### Firewall and routing paths
+
+You have to make sure that the paths defined in the firewall rules are exactly the same
+as the one in the routes (trailing / inclusive).
+
+### Users and passwords
+
+If you're defining the users in an array, you have to use unencoded passwords.
+
+In production, you have to store a list of hashed passwords in an external resource
+(and avoid calculating a new hash on each reload!).  
+Use `$app['security.default_encoder']->encodePassword('password', '')` to encode passwords.
