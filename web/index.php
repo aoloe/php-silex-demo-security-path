@@ -14,9 +14,11 @@ $app = new Aoloe\Demo\Application();
 
 $app->get('/admin', function(Request $request) use ($app) {
 
+    // echo("<pre>app: ".substr(print_r($app['security.authorization_checker'], 1), 0, 200)."</pre>");
+    // echo("<pre>app: ".get_class($app['security.authorization_checker'])."</pre>");
     return $app['twig']->render('admin.twig', [
-        // 'content' => ($app['security.authorization_checker']->isGranted('ROLE_ADMIN') ? 'logged in' : 'not logged in'),
-        'content' => 'Admin area',
+        'content' => ($app['security.authorization_checker']->isGranted('ROLE_ADMIN') ? 'logged in' : 'not logged in'),
+        // 'content' => 'Admin area',
     ]);
 });
 
@@ -30,9 +32,12 @@ $app->get('/login', function(Request $request) use ($app) {
     );
 })->bind('login');
 
+/*
 $app->get('/admin/logout', function(Request $request) use ($app) {
-    return $app->redirect($app['url_generator']->generate('home'));
-});
+    return "logged out";
+    // return $app->redirect($app['url_generator']->generate('home'));
+})->bind('admin_logout');
+*/
 
 $app->get('/', function(Request $request) use ($app) {
     return $app['twig']->render('index.twig', [
