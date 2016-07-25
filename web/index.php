@@ -9,15 +9,15 @@ include_once(APP_BASEDIR.'/vendor/autoload.php');
 
 $app = new Aoloe\Demo\Application();
 
-$app->get('/admin', function(/* Request $request*/) use ($app) {
+use Symfony\Component\HttpFoundation\Request;
+
+$app->get('/admin', function(Request $request) use ($app) {
 
     return $app['twig']->render('admin.twig', [
         // 'content' => ($app['security.authorization_checker']->isGranted('ROLE_ADMIN') ? 'logged in' : 'not logged in'),
         'content' => 'Admin area',
     ]);
 });
-
-use Symfony\Component\HttpFoundation\Request;
 
 $app->get('/login', function(Request $request) use ($app) {
     return $app['twig']->render(

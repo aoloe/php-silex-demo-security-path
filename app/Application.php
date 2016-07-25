@@ -23,8 +23,11 @@ class Application extends SilexApplication
 
         $app->register(new \Silex\Provider\MonologServiceProvider(), $app['monolog.options']);
 
+        $app->register(
+            new \Silex\Provider\SessionServiceProvider(),
+            ['session.storage.save_path' => APP_BASEDIR.'/var/sessions']
+        );
         $app->register(new \Silex\Provider\SecurityServiceProvider());
-        $app->register(new \Silex\Provider\SessionServiceProvider());
 
         $app['security.firewalls'] = [
             'admin' => [
