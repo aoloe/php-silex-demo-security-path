@@ -3,6 +3,8 @@ namespace Aoloe\Demo;
 
 use \Silex\Application as SilexApplication;
 
+use Symfony\Component\Security\Core\Encoder\PlaintextPasswordEncoder;
+
 class Application extends SilexApplication
 {
     public function __construct()
@@ -29,21 +31,30 @@ class Application extends SilexApplication
         );
         $app->register(new \Silex\Provider\SecurityServiceProvider());
 
+        $app['security.default_encoder'] = function ($app) {
+            return new PlaintextPasswordEncoder();
+        };
+
+        $users = [
+            // 'admin' => ['ROLE_ADMIN', $app['security.default_encoder']->encodePassword('password', 'abc')],
+            // 'admin' => ['ROLE_ADMIN', $app['security.encoder.digest']->encodePassword('password', 'abc')],
+            'admin' => ['ROLE_ADMIN', 'password'],
+        ];
+
         $app['security.firewalls'] = [
             'admin' => [
-                'pattern' => '^/admin/',
+                'pattern' => '^/admin',
                 'form' => [
                     'login_path' => '/login',
                     'logout' => [
                         'logout_path' => '/admin/logout',
+                        'target_url' => 'home',
                         'invalidate_session' => true
                     ],
                     'default_target_path' => '/admin',
                     'check_path' => '/admin/login_check'
                 ],
-                'users' => [
-                    'admin' => ['ROLE_ADMIN', $app['security.default_encoder']->encodePassword('password', '')],
-                ],
+                'users' => $users,
             ],
         ];
 
