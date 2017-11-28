@@ -3,7 +3,7 @@ namespace Aoloe\Demo;
 
 use \Silex\Application as SilexApplication;
 
-use Symfony\Component\Security\Core\Encoder\PlaintextPasswordEncoder;
+use \Symfony\Component\Security\Core\Encoder\PlaintextPasswordEncoder;
 
 class Application extends SilexApplication
 {
@@ -40,7 +40,7 @@ class Application extends SilexApplication
         // (and avoid calculating a new hash on each reload!).
         // Use $app['security.default_encoder']->encodePassword('password', '') to encode passwords.
         $users = [
-            'admin' => ['ROLE_ADMIN', 'password']
+            'admin' => ['ROLE_USER', 'password']
         ];
 
         // You have to make sure that the paths defined in the firewall rules are exactly the same
